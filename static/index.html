@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>StartupAI — AI-Powered Startup Validator</title>
+<meta name="description" content="Validate your startup idea with 5 specialized AI agents covering market analysis, competition, risk, and investor attractiveness."/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#09090f;--surface:#111118;--surface2:#1a1a26;--surface3:#22223a;
+  --border:#2a2a42;--border2:#3a3a5c;
+  --accent:#7c3aed;--accent2:#a855f7;--accent3:#c084fc;
+  --green:#10b981;--red:#ef4444;--yellow:#f59e0b;--blue:#3b82f6;--cyan:#06b6d4;
+  --text:#f8fafc;--text2:#94a3b8;--text3:#64748b;
+  --r:12px;--r2:20px;--trans:all 0.3s cubic-bezier(0.4,0,0.2,1);
+}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+
+/* ── Animated background ── */
+body::before{
+  content:'';position:fixed;inset:0;
+  background:radial-gradient(ellipse 80% 60% at 20% 10%,rgba(124,58,237,0.15) 0%,transparent 60%),
+             radial-gradient(ellipse 60% 50% at 80% 80%,rgba(168,85,247,0.1) 0%,transparent 60%);
+  pointer-events:none;z-index:0;
+}
+
+/* ── Nav ── */
+nav{position:sticky;top:0;z-index:100;background:rgba(9,9,15,0.85);backdrop-filter:blur(20px);
+    border-bottom:1px solid var(--border);padding:0 2rem;height:60px;display:flex;align-items:center;justify-content:space-between}
+.logo{font-size:1.3rem;font-weight:800;background:linear-gradient(135deg,var(--accent2),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.nav-badge{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-size:0.7rem;font-weight:600;padding:3px 10px;border-radius:20px}
+
+/* ── Hero ── */
+.hero{text-align:center;padding:5rem 2rem 3rem;position:relative;z-index:1}
+.hero-chip{display:inline-flex;align-items:center;gap:8px;background:rgba(124,58,237,0.15);border:1px solid rgba(168,85,247,0.3);color:var(--accent3);font-size:0.8rem;font-weight:600;padding:6px 16px;border-radius:20px;margin-bottom:1.5rem}
+.hero-chip span{width:7px;height:7px;background:var(--accent3);border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(0.8)}}
+h1{font-size:clamp(2.5rem,6vw,4.5rem);font-weight:900;line-height:1.1;margin-bottom:1.2rem;
+   background:linear-gradient(135deg,#fff 30%,var(--accent3) 70%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero-sub{font-size:1.1rem;color:var(--text2);max-width:560px;margin:0 auto 2rem}
+
+/* ── Agents strip ── */
+.agents-strip{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;padding:0 2rem 3rem;position:relative;z-index:1}
+.agent-badge{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);padding:8px 16px;border-radius:30px;font-size:0.8rem;font-weight:500;color:var(--text2)}
+.agent-badge .dot{width:8px;height:8px;border-radius:50%}
+
+/* ── Main container ── */
+.container{max-width:1100px;margin:0 auto;padding:0 2rem 6rem;position:relative;z-index:1}
+
+/* ── Form card ── */
+.form-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:2.5rem;margin-bottom:3rem}
+.form-card h2{font-size:1.4rem;font-weight:700;margin-bottom:0.4rem}
+.form-card p{color:var(--text2);font-size:0.9rem;margin-bottom:2rem}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem}
+.form-group{display:flex;flex-direction:column;gap:6px}
+.form-group.full{grid-column:1/-1}
+label{font-size:0.82rem;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.05em}
+input,textarea,select{background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:inherit;font-size:0.93rem;padding:11px 14px;border-radius:var(--r);transition:var(--trans);outline:none;resize:vertical}
+input:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(124,58,237,0.15)}
+textarea{min-height:90px}
+input::placeholder,textarea::placeholder{color:var(--text3)}
+
+/* ── Mode selector ── */
+.mode-selector{display:flex;gap:10px;margin-bottom:1.5rem;flex-wrap:wrap}
+.mode-btn{flex:1;min-width:120px;padding:10px 16px;background:var(--surface2);border:1px solid var(--border);color:var(--text2);border-radius:var(--r);cursor:pointer;font-family:inherit;font-size:0.85rem;font-weight:500;transition:var(--trans);text-align:center}
+.mode-btn.active{background:rgba(124,58,237,0.2);border-color:var(--accent);color:var(--accent3)}
+.mode-btn:hover:not(.active){border-color:var(--border2);color:var(--text)}
+
+/* ── Submit button ── */
+.btn-submit{width:100%;margin-top:1.5rem;padding:15px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-family:inherit;font-size:1rem;font-weight:700;border:none;border-radius:var(--r);cursor:pointer;transition:var(--trans);display:flex;align-items:center;justify-content:center;gap:10px}
+.btn-submit:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 30px rgba(124,58,237,0.4)}
+.btn-submit:disabled{opacity:0.6;cursor:not-allowed;transform:none}
+.btn-submit .spinner{width:20px;height:20px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── Loading state ── */
+#loading{display:none;text-align:center;padding:3rem 2rem}
+.loading-agents{display:flex;flex-direction:column;gap:12px;max-width:400px;margin:2rem auto}
+.loading-agent{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--border);padding:12px 16px;border-radius:var(--r);font-size:0.9rem;color:var(--text2);opacity:0.4;transition:var(--trans)}
+.loading-agent.active{opacity:1;border-color:var(--accent);color:var(--text)}
+.loading-agent .la-dot{width:10px;height:10px;border-radius:50%;background:var(--border2);flex-shrink:0}
+.loading-agent.active .la-dot{background:var(--accent2);animation:pulse 1s infinite}
+.loading-agent.done .la-dot{background:var(--green)}
+.loading-agent.done{opacity:0.7}
+.loading-title{font-size:1.5rem;font-weight:700;margin-bottom:0.5rem}
+.loading-sub{color:var(--text2);font-size:0.9rem}
+
+/* ── Error / status ── */
+.alert{padding:14px 18px;border-radius:var(--r);font-size:0.9rem;display:none;margin-bottom:1.5rem}
+.alert.error{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#fca5a5}
+.alert.success{background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);color:#6ee7b7}
+
+/* ── Results ── */
+#results{display:none}
+
+/* ── Verdict banner ── */
+.verdict-banner{border-radius:var(--r2);padding:2.5rem;text-align:center;margin-bottom:2rem;position:relative;overflow:hidden}
+.verdict-banner.STRONG-GO{background:linear-gradient(135deg,rgba(16,185,129,0.2),rgba(6,182,212,0.1));border:1px solid rgba(16,185,129,0.4)}
+.verdict-banner.GO{background:linear-gradient(135deg,rgba(16,185,129,0.15),rgba(59,130,246,0.1));border:1px solid rgba(16,185,129,0.3)}
+.verdict-banner.CONDITIONAL-GO{background:linear-gradient(135deg,rgba(245,158,11,0.15),rgba(251,191,36,0.05));border:1px solid rgba(245,158,11,0.3)}
+.verdict-banner.NO-GO{background:linear-gradient(135deg,rgba(239,68,68,0.15),rgba(220,38,38,0.05));border:1px solid rgba(239,68,68,0.3)}
+.verdict-label{font-size:0.8rem;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;opacity:0.7;margin-bottom:0.5rem}
+.verdict-text{font-size:2.5rem;font-weight:900;margin-bottom:1rem}
+.STRONG-GO .verdict-text{color:var(--green)}
+.GO .verdict-text{color:#34d399}
+.CONDITIONAL-GO .verdict-text{color:var(--yellow)}
+.NO-GO .verdict-text{color:var(--red)}
+.verdict-summary{color:var(--text2);font-size:0.95rem;max-width:700px;margin:0 auto 1.5rem;line-height:1.7}
+
+/* ── Score ring ── */
+.score-ring-wrap{display:flex;justify-content:center;gap:3rem;flex-wrap:wrap;margin-top:1.5rem}
+.score-item{text-align:center}
+.score-circle{width:80px;height:80px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:800;margin:0 auto 6px;border:3px solid}
+.score-circle.high{border-color:var(--green);color:var(--green);background:rgba(16,185,129,0.1)}
+.score-circle.mid{border-color:var(--yellow);color:var(--yellow);background:rgba(245,158,11,0.1)}
+.score-circle.low{border-color:var(--red);color:var(--red);background:rgba(239,68,68,0.1)}
+.score-label{font-size:0.75rem;color:var(--text2);font-weight:500}
+
+/* ── Tabs ── */
+.tabs{display:flex;gap:4px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:4px;margin-bottom:1.5rem;flex-wrap:wrap}
+.tab{flex:1;min-width:100px;padding:9px 14px;background:none;border:none;color:var(--text2);border-radius:8px;cursor:pointer;font-family:inherit;font-size:0.85rem;font-weight:500;transition:var(--trans);white-space:nowrap;text-align:center}
+.tab.active{background:var(--surface3);color:var(--text)}
+.tab:hover:not(.active){color:var(--text)}
+.tab-content{display:none}
+.tab-content.active{display:block}
+
+/* ── Section cards ── */
+.section-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:2rem;margin-bottom:1.5rem}
+.section-card h3{font-size:1.1rem;font-weight:700;margin-bottom:1.2rem;display:flex;align-items:center;gap:10px}
+.section-icon{font-size:1.2rem}
+
+/* ── Score bar ── */
+.score-bar-wrap{display:flex;align-items:center;gap:12px;margin-bottom:1rem}
+.score-bar-label{font-size:0.85rem;color:var(--text2);min-width:130px}
+.score-bar-track{flex:1;height:8px;background:var(--surface3);border-radius:4px;overflow:hidden}
+.score-bar-fill{height:100%;border-radius:4px;transition:width 1s ease;background:linear-gradient(90deg,var(--accent),var(--accent2))}
+.score-bar-val{font-size:0.85rem;font-weight:700;min-width:36px;text-align:right}
+
+/* ── Tags ── */
+.tags{display:flex;flex-wrap:wrap;gap:8px}
+.tag{font-size:0.8rem;font-weight:500;padding:5px 12px;border-radius:20px;border:1px solid}
+.tag.green{background:rgba(16,185,129,0.1);border-color:rgba(16,185,129,0.3);color:#6ee7b7}
+.tag.red{background:rgba(239,68,68,0.1);border-color:rgba(239,68,68,0.3);color:#fca5a5}
+.tag.yellow{background:rgba(245,158,11,0.1);border-color:rgba(245,158,11,0.3);color:#fcd34d}
+.tag.blue{background:rgba(59,130,246,0.1);border-color:rgba(59,130,246,0.3);color:#93c5fd}
+.tag.purple{background:rgba(168,85,247,0.1);border-color:rgba(168,85,247,0.3);color:var(--accent3)}
+
+/* ── Competitor / Risk cards ── */
+.item-list{display:flex;flex-direction:column;gap:12px}
+.item-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:1.2rem}
+.item-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:10px;flex-wrap:wrap}
+.item-card-title{font-weight:600;font-size:0.95rem}
+.item-card-desc{font-size:0.87rem;color:var(--text2);line-height:1.6}
+.risk-badge{font-size:0.75rem;font-weight:700;padding:3px 10px;border-radius:12px}
+.risk-H{background:rgba(239,68,68,0.15);color:#fca5a5}
+.risk-M{background:rgba(245,158,11,0.15);color:#fcd34d}
+.risk-L{background:rgba(16,185,129,0.15);color:#6ee7b7}
+.sub-list{display:flex;flex-direction:column;gap:4px;margin-top:8px}
+.sub-list li{font-size:0.82rem;color:var(--text3);list-style:none;padding-left:16px;position:relative;line-height:1.5}
+.sub-list li::before{content:'›';position:absolute;left:0;color:var(--accent3)}
+
+/* ── Roadmap ── */
+.roadmap{display:flex;flex-direction:column;gap:0}
+.road-item{display:flex;gap:1.2rem;position:relative}
+.road-item:not(:last-child)::after{content:'';position:absolute;left:18px;top:38px;bottom:0;width:2px;background:var(--border);z-index:0}
+.road-dot{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;flex-shrink:0;z-index:1}
+.road-body{padding-bottom:1.5rem;flex:1}
+.road-phase{font-weight:700;font-size:0.95rem;margin-bottom:4px}
+.road-goal{font-size:0.82rem;color:var(--accent3);margin-bottom:8px}
+
+/* ── Insight list ── */
+.insight-list{display:flex;flex-direction:column;gap:10px}
+.insight-item{display:flex;gap:10px;align-items:flex-start;font-size:0.88rem;color:var(--text2);line-height:1.6}
+.insight-num{width:24px;height:24px;border-radius:50%;background:rgba(168,85,247,0.15);border:1px solid rgba(168,85,247,0.3);color:var(--accent3);font-size:0.75rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+
+/* ── 2-col grid ── */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem}
+@media(max-width:700px){.two-col,.form-grid{grid-template-columns:1fr}}
+
+/* ── Investor types ── */
+.investor-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:1rem}
+.investor-type{font-weight:600;font-size:0.9rem;color:var(--accent3);margin-bottom:4px}
+.investor-reason{font-size:0.82rem;color:var(--text2);margin-bottom:4px}
+.investor-ex{font-size:0.78rem;color:var(--text3)}
+
+/* ── Footer ── */
+footer{text-align:center;padding:2rem;color:var(--text3);font-size:0.82rem;border-top:1px solid var(--border);position:relative;z-index:1}
+
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:0.78rem;font-weight:600;padding:3px 10px;border-radius:12px}
+.chip-green{background:rgba(16,185,129,0.12);color:#6ee7b7}
+.chip-red{background:rgba(239,68,68,0.12);color:#fca5a5}
+.chip-yellow{background:rgba(245,158,11,0.12);color:#fcd34d}
+.chip-blue{background:rgba(59,130,246,0.12);color:#93c5fd}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">⚡ StartupAI</div>
+  <div class="nav-badge">5 AI AGENTS</div>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-chip"><span></span>Powered by Gemini AI</div>
+  <h1>Validate Your Startup<br/>Before You Build</h1>
+  <p class="hero-sub">5 specialized AI agents analyze your idea across market, competition, risk, and investor dimensions — then deliver a Go/No-Go verdict.</p>
+</section>
+
+<!-- Agent badges -->
+<div class="agents-strip">
+  <div class="agent-badge"><div class="dot" style="background:#3b82f6"></div>Market Agent</div>
+  <div class="agent-badge"><div class="dot" style="background:#8b5cf6"></div>Competitor Agent</div>
+  <div class="agent-badge"><div class="dot" style="background:#ef4444"></div>Risk Agent</div>
+  <div class="agent-badge"><div class="dot" style="background:#10b981"></div>Investor Agent</div>
+  <div class="agent-badge"><div class="dot" style="background:#f59e0b"></div>Decision Agent</div>
+</div>
+
+<div class="container">
+
+  <!-- Input form -->
+  <div class="form-card">
+    <h2>Describe Your Startup</h2>
+    <p>Fill in the details below and our AI panel will produce a comprehensive validation report.</p>
+
+    <div style="margin-bottom:1rem">
+      <label style="display:block;margin-bottom:8px">ANALYSIS MODE</label>
+      <div class="mode-selector" id="modeSelector">
+        <button class="mode-btn active" data-mode="full" onclick="setMode('full',this)">🚀 Full Validation (All 5 Agents)</button>
+        <button class="mode-btn" data-mode="market" onclick="setMode('market',this)">📊 Market Only</button>
+        <button class="mode-btn" data-mode="competitor" onclick="setMode('competitor',this)">⚔️ Competitor Only</button>
+        <button class="mode-btn" data-mode="risk" onclick="setMode('risk',this)">⚠️ Risk Only</button>
+        <button class="mode-btn" data-mode="investor" onclick="setMode('investor',this)">💰 Investor Only</button>
+      </div>
+    </div>
+
+    <div class="alert error" id="errorAlert"></div>
+
+    <form id="startupForm">
+      <div class="form-grid">
+        <div class="form-group full">
+          <label for="idea">Startup Idea / Business Description</label>
+          <textarea id="idea" style="min-height: 150px" placeholder="Describe your startup idea in detail. What is it, who is it for, and what problem does it solve?" required></textarea>
+        </div>
+      </div>
+      <button type="submit" class="btn-submit" id="submitBtn">
+        <span id="btnText">🚀 Run Full Validation</span>
+      </button>
+      <button type="button" class="btn-submit" id="downloadBtn" style="display:none; margin-top:0.8rem; background:linear-gradient(135deg,#0f766e,#14b8a6)">⬇️ Download PDF Report</button>
+    </form>
+  </div>
+
+  <!-- Loading -->
+  <div id="loading">
+    <div class="loading-title">AI Agents Working...</div>
+    <div class="loading-sub">This takes 30–90 seconds. Please wait.</div>
+    <div class="loading-agents" id="loadingAgents"></div>
+  </div>
+
+  <!-- Results -->
+  <div id="results"></div>
+
+</div>
+
+<footer>Built with FastAPI + Gemini AI · AI-Powered Startup Validation Platform</footer>
+
+<script>
+let currentMode = 'full';
+
+function setMode(mode, btn) {
+  currentMode = mode;
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const labels = {
+    full: '🚀 Run Full Validation',
+    market: '📊 Analyze Market',
+    competitor: '⚔️ Analyze Competition',
+    risk: '⚠️ Analyze Risks',
+    investor: '💰 Analyze Investment Appeal'
+  };
+  document.getElementById('btnText').textContent = labels[mode];
+}
+
+function scoreClass(v) {
+  if (v >= 7) return 'high';
+  if (v >= 4) return 'mid';
+  return 'low';
+}
+function scoreColor(v) {
+  if (v >= 7) return 'var(--green)';
+  if (v >= 4) return 'var(--yellow)';
+  return 'var(--red)';
+}
+function riskBadge(level) {
+  return `<span class="risk-badge risk-${(level||'M')[0]}">${level||'—'}</span>`;
+}
+function items(arr, fn) {
+  return (arr||[]).map(fn).join('');
+}
+function insightList(arr) {
+  return `<div class="insight-list">${(arr||[]).map((t,i)=>
+    `<div class="insight-item"><div class="insight-num">${i+1}</div><span>${t}</span></div>`).join('')}</div>`;
+}
+function tagList(arr, cls) {
+  return `<div class="tags">${(arr||[]).map(t=>`<span class="tag ${cls}">${t}</span>`).join('')}</div>`;
+}
+function scoreBar(label, val, max=10) {
+  const pct = Math.round((val/max)*100);
+  return `<div class="score-bar-wrap">
+    <div class="score-bar-label">${label}</div>
+    <div class="score-bar-track"><div class="score-bar-fill" style="width:${pct}%;background:${scoreColor(val)}"></div></div>
+    <div class="score-bar-val" style="color:${scoreColor(val)}">${val}</div>
+  </div>`;
+}
+
+// ── Renderers ──────────────────────────────────────────────
+
+function renderMarket(d) {
+  return `
+  <div class="section-card">
+    <h3><span class="section-icon">📊</span>Market Overview</h3>
+    <div class="two-col" style="margin-bottom:1.2rem">
+      <div><div style="font-size:0.78rem;color:var(--text3);font-weight:600;text-transform:uppercase;margin-bottom:4px">Market Size (TAM)</div>
+           <div style="font-weight:700;color:var(--text)">${d.market_size_estimate||'—'}</div></div>
+      <div><div style="font-size:0.78rem;color:var(--text3);font-weight:600;text-transform:uppercase;margin-bottom:4px">Growth Rate (CAGR)</div>
+           <div style="font-weight:700;color:var(--green)">${d.market_growth_rate||'—'}</div></div>
+    </div>
+    ${scoreBar('Market Viability', d.market_viability_score||0)}
+    <p style="color:var(--text2);font-size:0.88rem;line-height:1.7;margin-top:1rem">${d.market_viability_summary||''}</p>
+  </div>
+  <div class="section-card">
+    <h3><span class="section-icon">📈</span>Industry Trends</h3>
+    <div class="item-list">${items(d.industry_trends, t=>`
+      <div class="item-card">
+        <div class="item-card-header"><div class="item-card-title">${t.trend}</div><span class="chip chip-blue">Trend</span></div>
+        <div class="item-card-desc">${t.description}</div>
+        <div style="font-size:0.8rem;color:var(--accent3);margin-top:6px">↳ ${t.relevance}</div>
+      </div>`)}</div>
+  </div>
+  <div class="section-card">
+    <h3><span class="section-icon">🎯</span>Market Opportunities</h3>
+    <div class="item-list">${items(d.market_opportunities, o=>`
+      <div class="item-card">
+        <div class="item-card-header"><div class="item-card-title">${o.opportunity}</div>
+        <span class="chip ${o.potential_impact==='High'?'chip-green':o.potential_impact==='Medium'?'chip-yellow':'chip-blue'}">${o.potential_impact}</span></div>
+        <div class="item-card-desc">${o.description}</div>
+      </div>`)}</div>
+  </div>
+  <div class="section-card">
+    <h3><span class="section-icon">💡</span>Key Insights & Recommendations</h3>
+    <div class="two-col">
+      <div><div style="font-weight:600;margin-bottom:10px;font-size:0.9rem">Key Insights</div>${insightList(d.key_insights)}</div>
+      <div><div style="font-weight:600;margin-bottom:10px;font-size:0.9rem">Recommendations</div>${insightList(d.recommendations)}</div>
+    </div>
+  </div>`;
+}
+
+function renderCompetitor(d) {
+  return `
+  <div class="section-card">
+    <h3><span class="section-icon">⚔️</span>Competitive Landscape</h3>
+    <div class="two-col" style="margin-bottom:1.2rem">
+      <div><div style="font-size:0.78rem;color:var(--text3);font-weight:600;text-transform:uppercase;margin-bottom:4px">Threat Level</div>
+           <span class="chip ${d.threat_level==='High'?'chip-red':d.threat_level==='Medium'?'chip-yellow':'chip-green'}">${d.threat_level||'—'}</span></div>
+    </div>
+    ${scoreBar('Competitiveness Score', d.competitiveness_score||0)}
+    <p style="color:var(--text2);font-size:0.88rem;line-height:1.7;margin-top:1rem">${d.competitive_landscape_summary||''}</p>
+  </div>
+  <div class="section-card">
+    <h3><span class="section-icon">🏢</span>Competitors (${(d.competitors||[]).length})</h3>
+    <div class="item-list">${items(d.competitors, c=>`
+      <div class="item-card">
+        <div class="item-card-header">
+          <div class="item-card-title">${c.name}</div>
+          <span class="chip ${c.type==='Direct'?'chip-red':'chip-blue'}">${c.type}</span>
+        </div>
+        <div class="item-card-desc">${c.description}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px">
+          <div><div style="font-size:0.75rem;color:var(--green);font-weight:600;margin-bottom:4px">STRENGTHS</div>
+               <ul class="sub-list">${c.strengths.map(s=>`<li>${s}</li>`).join('')}</ul></div>
+          <div><div style="font-size:0.75rem;color:var(--red);font-weight:600;margin-bottom:4px">WEAKNESSES</div>
+               <ul class="sub-list">${c.weaknesses.map(w=>`<li>${w}</li>`).join('')}</ul></div>
+        </div>
+        ${c.market_share?`<div style="font-size:0.78rem;color:var(--text3);margin-top:6px">Market share: ${c.market_share}</div>`:''}
+      </div>`)}</div>
+  </div>
+  <div class="section-card">
+    <h3><span class="section-icon">🏆</span>Competitive Advantages & Market Gaps</h3>
+    <div class="two-col">
+      <div>
+        <div style="font-weight:600;margin-bottom:10px;font-size:0.9rem">Your Advantages</div>
+        <div class="item-list">${items(d.competitive_advantages, a=>`
+          <div class="item-card">
+            <div class="item-card-header"><div class="item-card-title" style="font-size:0.88rem">${a.advantage}</div>
+            <span class="chip ${a.sustainability==='High'?'chip-green':a.sustainability==='Medium'?'chip-yellow':'chip-red'}">${a.sustainability}</span></div>
+            <div class="item-card-desc">${a.description}</div>
+          </div>`)}</div>
+      </div>
+      <div>
+        <div style="font-weight:600;margin-bottom:10px;font-size:0.9rem">Market Gaps</div>
+        <div class="item-list">${items(d.market_gaps, g=>`
+          <div class="item-card">
+            <div class="item-card-header"><div class="item-card-title" style="font-size:0.88rem">${g.gap}</div>
+            <span class="chip ${g.opportunity_level==='High'?'chip-green':g.opportunity_level==='Medium'?'chip-yellow':'chip-blue'}">${g.opportunity_level}</span></div>
+            <div class="item-card-desc">${g.description}</div>
+          </div>`)}</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderRisk(d) {
+  return `
+  <div class="section-card">
+    <h3><span class="section-icon">⚠️</span>Risk Profile</h3>
+    <div class="two-col" style="margin-bottom:1.2rem">
+      <div><div style="font-size:0.78rem;color:var(--text3);font-weight:600;text-transform:uppercase;margin-bottom:4px">Overall Risk Level</div>
+           <span class="chip ${d.overall_risk_level==='High'?'chip-red':d.overall_risk_level==='Medium'?'chip-yellow':'chip-green'}">${d.overall_risk_level||'—'}</span></div>
+    </div>
+    ${scoreBar('Risk Score (Lower is Better)', d.risk_score||0)}
+    <p style="color:var(--text2);font-size:0.88rem;line-height:1.7;margin-top:1rem">${d.risk_summary||''}</p>
+  </div>
+  <div class="section-card">
+    <h3><span class="section-icon">🔍</span>Identified Risks</h3>
+    <div class="item-list">${items(d.risks, r=>`
+      <div class="item-card">
+        <div class="item-card-header">
+          <div>
+            <div class="item-card-title">${r.risk_name}</div>
+            <span class="chip chip-blue" style="margin-top:4px">${r.category}</span>
+          </div>
+          <div style="text-align:right">
+            ${riskBadge(r.likelihood)} ${riskBadge(r.impact)}
+            <div style="font-size:1.1rem;font-weight:800;color:${scoreColor(10-r.risk_score)};margin-top:4px">${r.risk_score}/10</div>
+          </div>
+        </div>
+        <div class="item-card-desc">${r.description}</div>
+        <div style="margin-top:8px">
+          <div style="font-size:0.75rem;color:var(--accent3);font-weight:600;margin-bottom:4px">MITIGATION</div>
+          <ul class="sub-list">${r.mitigation_strategies.map(m=>`<li>${m}</li>`).join('')}</ul>
+        </div>
+      </div>`)}</div>
+  </div>
+  <div class="section-card">
+    <h3><span class="section-icon">🛡️</span>Risk Insights & Recommendations</h3>
+    <div class="two-col">
+      <div><div style="font-weight:600;margin-bottom:10px;font-size:0.9rem">Key Insights</div>${insightList(d.key_insights)}</div>
+      <div><div style="font-weight:600;margin-bottom:10px;font-size:0.9rem">Recommendations</div>${insightList(d.recommendations)}</div>
+    </div>
+  </div>`;
+}
+
+function renderInvestor(d) {
+  const ep = d.exit_potential||{};
+  return `
+  <div class="section-card">
+    <h3><span class="section-icon">💰</span>Investment Overview</h3>
+    <div class="two-col" style="margin-bottom:1.2rem">
+      <div><div style="font-size:0.78rem;color:var(--text3);font-weight:600;text-transform:uppercase;margin-bottom:4px">Funding Stage</div>
+           <div style="font-weight:700">${d.funding_stage_recommendation||'—'}</div></div>
+      <div><div style="font-size:0.78rem;color:var(--text3);font-weight:600;text-transform:uppercase;margin-bottom:4px">Estimated Funding</div>
+           <div style="font-weight:700;color:var(--green)">${d.estimated_funding_requirement||'—'}</div></div>
+    </div>
+    ${scoreBar('Investor Attractiveness', d.investor_attractiveness_score||0)}
+    <div style="margin-top:1.2rem">
+      <div style="font-size:0.78rem;color:var(--text3);font-weight:600;text-transform:uppercase;margin-bottom:8px">Investment Highlights</div>
+      ${tagList(d.investment_highlights,'green')}
+    </div>
+    <div style="margin-top:1.2rem">
+      <div style="font-size:0.78rem;color:var(--text3);font-weight:600;text-transform:uppercase;margin-bottom:8px">Red Flags</div>
+      ${tagList(d.investment_red_flags,'red')}
+    </div>
+  </div>
+  <div class="section-card">
+    <h3><span class="section-icon">👥</span>Potential Investors</h3>
+    <div class="item-list">${items(d.potential_investor_types, i=>`
+      <div class="investor-card">
+        <div class="investor-type">${i.investor_type}</div>
+        <div class="investor-reason">${i.reasoning}</div>
+        <div class="investor-ex">Examples: ${i.examples}</div>
+      </div>`)}</div>
+  </div>
+  <div class="section-card">
+    <h3><span class="section-icon">🚪</span>Exit Potential</h3>
+    <div class="two-col">
+      <div>
+        <div style="font-size:0.78rem;color:var(--text3);font-weight:600;text-transform:uppercase;margin-bottom:8px">Exit Options</div>
+        ${tagList(ep.exit_options||[],'blue')}
+        <div style="font-size:0.78rem;color:var(--text3);font-weight:600;text-transform:uppercase;margin:12px 0 8px">Timeline</div>
+        <span class="chip chip-purple">${ep.estimated_timeline||'—'}</span>
+      </div>
+      <div>
+        <div style="font-size:0.78rem;color:var(--text3);font-weight:600;text-transform:uppercase;margin-bottom:8px">Likely Acquirers</div>
+        ${tagList(ep.likely_acquirers||[],'purple')}
+      </div>
+    </div>
+    <div style="margin-top:1.2rem">
+      <div style="font-size:0.78rem;color:var(--text3);font-weight:600;text-transform:uppercase;margin-bottom:8px">Revenue Model</div>
+      <p style="font-size:0.88rem;color:var(--text2);line-height:1.7">${d.revenue_model_assessment||''}</p>
+    </div>
+    <div style="margin-top:1rem">
+      <div style="font-size:0.78rem;color:var(--text3);font-weight:600;text-transform:uppercase;margin-bottom:8px">Scalability</div>
+      <p style="font-size:0.88rem;color:var(--text2);line-height:1.7">${d.scalability_assessment||''}</p>
+    </div>
+  </div>`;
+}
+
+function renderDecision(d) {
+  const sb = d.score_breakdown||{};
+  const vc = d.final_verdict?.replace(' ','-')||'GO';
+  return `
+  <div class="verdict-banner ${vc}">
+    <div class="verdict-label">Final Verdict</div>
+    <div class="verdict-text">${d.final_verdict||'—'}</div>
+    <div class="verdict-summary">${d.executive_summary||''}</div>
+    <div class="score-ring-wrap">
+      <div class="score-item"><div class="score-circle ${scoreClass(d.overall_score||0)}">${(d.overall_score||0).toFixed(1)}</div><div class="score-label">Overall</div></div>
+      <div class="score-item"><div class="score-circle ${scoreClass(sb.market_score||0)}">${(sb.market_score||0).toFixed(1)}</div><div class="score-label">Market</div></div>
+      <div class="score-item"><div class="score-circle ${scoreClass(sb.competitiveness_score||0)}">${(sb.competitiveness_score||0).toFixed(1)}</div><div class="score-label">Competition</div></div>
+      <div class="score-item"><div class="score-circle ${scoreClass(10-(sb.risk_score||0))}">${(sb.risk_score||0).toFixed(1)}</div><div class="score-label">Risk</div></div>
+      <div class="score-item"><div class="score-circle ${scoreClass(sb.investor_score||0)}">${(sb.investor_score||0).toFixed(1)}</div><div class="score-label">Investor</div></div>
+    </div>
+  </div>
+  <div class="two-col">
+    <div class="section-card">
+      <h3><span class="section-icon">✅</span>Strengths</h3>
+      ${insightList(d.strengths)}
+    </div>
+    <div class="section-card">
+      <h3><span class="section-icon">⚡</span>Weaknesses</h3>
+      ${insightList(d.weaknesses)}
+    </div>
+  </div>
+  ${d.conditions&&d.conditions.length?`<div class="section-card" style="border-color:rgba(245,158,11,0.3)">
+    <h3><span class="section-icon">📋</span>Conditions to Proceed</h3>
+    ${insightList(d.conditions)}
+  </div>`:''}
+  <div class="section-card">
+    <h3><span class="section-icon">🎯</span>Recommended Next Steps</h3>
+    ${insightList(d.recommended_next_steps)}
+    <p style="font-size:0.88rem;color:var(--text2);line-height:1.7;margin-top:1.2rem;padding-top:1rem;border-top:1px solid var(--border)">${d.verdict_reasoning||''}</p>
+  </div>
+  <div class="section-card">
+    <h3><span class="section-icon">🗺️</span>12-Month Roadmap</h3>
+    <div class="roadmap">${items(d.roadmap, (p,i)=>`
+      <div class="road-item">
+        <div class="road-dot">${i+1}</div>
+        <div class="road-body">
+          <div class="road-phase">${p.phase}</div>
+          <div class="road-goal">${p.goal}</div>
+          <ul class="sub-list">${p.milestones.map(m=>`<li>${m}</li>`).join('')}</ul>
+        </div>
+      </div>`)}</div>
+  </div>`;
+}
+
+// ── Main analysis renderer ─────────────────────────────────
+function renderResults(data, mode) {
+  const el = document.getElementById('results');
+  const downloadBtn = document.getElementById('downloadBtn');
+  const reportPayload = {
+    idea: document.getElementById('idea').value.trim(),
+    report: data.data,
+  };
+  window.__lastReportPayload = reportPayload;
+  downloadBtn.style.display = 'inline-flex';
+  downloadBtn.onclick = async function() {
+    try {
+      downloadBtn.disabled = true;
+      downloadBtn.innerHTML = '<div class="spinner"></div><span>Downloading PDF...</span>';
+      const resp = await fetch('/api/v1/export/pdf', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify(reportPayload)
+      });
+      if (!resp.ok) {
+        const json = await resp.json().catch(() => null);
+        throw new Error((json && (json.detail || json.error)) || `HTTP ${resp.status}`);
+      }
+      const blob = await resp.blob();
+      const filename = (reportPayload.idea || 'startup_report').replace(/[^a-zA-Z0-9]+/g, '_').substring(0, 50) + '.pdf';
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      alert('PDF download failed: ' + (err.message || 'Unknown error'));
+    } finally {
+      downloadBtn.disabled = false;
+      downloadBtn.innerHTML = '⬇️ Download PDF Report';
+    }
+  };
+
+  if (mode === 'full') {
+    const reports = (data.data && data.data.reports) ? data.data.reports : {};
+    const hasDecision = !!reports.final_decision;
+    let html = '';
+
+    if (hasDecision) {
+      html += renderDecision(reports.final_decision);
+    }
+
+    html += `<div class="tabs" id="agentTabs">
+      <button class="tab active" onclick="switchTab('market')">📊 Market</button>
+      <button class="tab" onclick="switchTab('competitor')">⚔️ Competitor</button>
+      <button class="tab" onclick="switchTab('risk')">⚠️ Risk</button>
+      <button class="tab" onclick="switchTab('investor')">💰 Investor</button>
+    </div>`;
+
+    const tabs = {
+      market: reports.market_analysis,
+      competitor: reports.competitor_analysis,
+      risk: reports.risk_analysis,
+      investor: reports.investor_analysis
+    };
+
+    for (const [key, rpt] of Object.entries(tabs)) {
+      const isActive = key === 'market';
+      html += `<div class="tab-content ${isActive?'active':''}" id="tab-${key}">`;
+      if (rpt) {
+        if (key==='market') html += renderMarket(rpt);
+        if (key==='competitor') html += renderCompetitor(rpt);
+        if (key==='risk') html += renderRisk(rpt);
+        if (key==='investor') html += renderInvestor(rpt);
+      } else {
+        html += `<div class="section-card"><p style="color:var(--text3)">This agent did not complete successfully.</p></div>`;
+      }
+      html += '</div>';
+    }
+
+    if (data.errors && Object.keys(data.errors).length) {
+      html += `<div class="section-card" style="border-color:rgba(239,68,68,0.3)">
+        <h3><span class="section-icon">⚠️</span>Partial Errors</h3>
+        ${Object.entries(data.errors).map(([k,v])=>`<div style="font-size:0.85rem;color:var(--text2);margin-bottom:6px"><strong>${k}:</strong> ${v}</div>`).join('')}
+      </div>`;
+    }
+
+    el.innerHTML = html;
+  } else {
+    // Single agent
+    const rpt = data.data||{};
+    let html = '';
+    if (mode==='market') html = renderMarket(rpt);
+    if (mode==='competitor') html = renderCompetitor(rpt);
+    if (mode==='risk') html = renderRisk(rpt);
+    if (mode==='investor') html = renderInvestor(rpt);
+    el.innerHTML = html;
+  }
+
+  el.style.display = 'block';
+  el.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function switchTab(key) {
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('#agentTabs .tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(`tab-${key}`).classList.add('active');
+  event.target.classList.add('active');
+
+  // Animate score bars
+  setTimeout(()=>{
+    document.querySelectorAll('#tab-'+key+' .score-bar-fill').forEach(bar=>{
+      const w = bar.style.width;
+      bar.style.width='0';
+      setTimeout(()=>bar.style.width=w, 50);
+    });
+  }, 50);
+}
+
+// Loading agent sequence
+const agentLabels = {
+  full: [{id:'market',label:'Market Agent',icon:'📊'},{id:'competitor',label:'Competitor Agent',icon:'⚔️'},
+         {id:'risk',label:'Risk Agent',icon:'⚠️'},{id:'investor',label:'Investor Agent',icon:'💰'},
+         {id:'decision',label:'Decision Agent',icon:'🏁'}],
+  market:[{id:'market',label:'Market Agent',icon:'📊'}],
+  competitor:[{id:'competitor',label:'Competitor Agent',icon:'⚔️'}],
+  risk:[{id:'risk',label:'Risk Agent',icon:'⚠️'}],
+  investor:[{id:'investor',label:'Investor Agent',icon:'💰'}]
+};
+
+let animInterval = null;
+
+function startLoadingAnimation(mode) {
+  const agents = agentLabels[mode]||agentLabels.full;
+  const container = document.getElementById('loadingAgents');
+  container.innerHTML = agents.map(a=>`
+    <div class="loading-agent" id="la-${a.id}">
+      <div class="la-dot"></div>
+      <span>${a.icon} ${a.label}</span>
+    </div>`).join('');
+
+  let idx = 0;
+  function tick() {
+    if (idx > 0) {
+      const prev = document.getElementById(`la-${agents[idx-1].id}`);
+      if (prev) { prev.classList.remove('active'); prev.classList.add('done'); }
+    }
+    if (idx < agents.length) {
+      const cur = document.getElementById(`la-${agents[idx].id}`);
+      if (cur) cur.classList.add('active');
+      idx++;
+      const delay = mode==='full' ? (idx===5?15000:8000) : 8000;
+      animInterval = setTimeout(tick, delay);
+    }
+  }
+  tick();
+}
+
+function stopLoadingAnimation() {
+  if (animInterval) clearTimeout(animInterval);
+}
+
+// ── Form submit ────────────────────────────────────────────
+document.getElementById('startupForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+
+  const btn = document.getElementById('submitBtn');
+  const downloadBtn = document.getElementById('downloadBtn');
+  const loading = document.getElementById('loading');
+  const results = document.getElementById('results');
+  const errAlert = document.getElementById('errorAlert');
+
+  errAlert.style.display = 'none';
+  results.style.display = 'none';
+  downloadBtn.style.display = 'none';
+  loading.style.display = 'block';
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner"></div><span>Analyzing...</span>';
+
+  startLoadingAnimation(currentMode);
+
+  const payload = {
+    idea: document.getElementById('idea').value.trim()
+  };
+
+  const endpoints = {
+    full: '/api/v1/validate',
+    market: '/api/v1/analyze/market',
+    competitor: '/api/v1/analyze/competitor',
+    risk: '/api/v1/analyze/risk',
+    investor: '/api/v1/analyze/investor'
+  };
+
+  try {
+    const resp = await fetch(endpoints[currentMode], {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    });
+    const json = await resp.json();
+
+    stopLoadingAnimation();
+    loading.style.display = 'none';
+
+    if (!resp.ok) {
+      throw new Error(json.detail || `HTTP ${resp.status}`);
+    }
+
+    renderResults(json, currentMode);
+
+    // Animate score bars after render
+    setTimeout(()=>{
+      document.querySelectorAll('.score-bar-fill').forEach(bar=>{
+        const w = bar.style.width;
+        bar.style.width='0';
+        setTimeout(()=>bar.style.width=w, 100);
+      });
+    }, 200);
+
+  } catch(err) {
+    stopLoadingAnimation();
+    loading.style.display = 'none';
+    errAlert.textContent = '❌ ' + (err.message||'An error occurred. Please try again.');
+    errAlert.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<span id="btnText">' + document.querySelector('.mode-btn.active').textContent + '</span>';
+  }
+});
+</script>
+</body>
+</html>
