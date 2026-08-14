@@ -91,7 +91,7 @@ def ask_gemini_json(prompt: str, model: Optional[str] = None) -> Optional[dict[s
     if raw_text.startswith("Gemini server is currently busy"):
         logger.error("Could not get Gemini response after retries.")
         return None
-
+    logger.error("RAW GEMINI RESPONSE:\n%s", raw_text)
     parsed = extract_json(raw_text)
 
     if parsed is None:

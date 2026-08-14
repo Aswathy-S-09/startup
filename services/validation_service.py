@@ -131,7 +131,7 @@ def run_full_validation(startup: StartupInput) -> dict[str, Any]:
             results["reports"][agent_key] = report
             results["agents_executed"].append(agent.agent_name)
         except (ValueError, Exception) as e:
-            logger.error("Agent '%s' failed: %s", agent.agent_name, e)
+            logger.exception("Agent '%s' failed", agent.agent_name)
             results["errors"][agent_key] = str(e)
 
     # ── Phase 2: Final Decision Agent (only if all 4 succeeded) ──
@@ -153,7 +153,7 @@ def run_full_validation(startup: StartupInput) -> dict[str, Any]:
             results["reports"]["final_decision"] = decision_report
             results["agents_executed"].append(decision_agent.agent_name)
         except Exception as e:
-            logger.error("Final Decision Agent failed: %s", e)
+            logger.exception("Final Decision Agent failed")
             results["errors"]["final_decision"] = str(e)
     else:
         missing = required - available
