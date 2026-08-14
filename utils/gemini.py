@@ -86,12 +86,19 @@ def ask_gemini_json(prompt: str, model: Optional[str] = None) -> Optional[dict[s
     Returns:
         Parsed dict on success, None on failure.
     """
+    def ask_gemini_json(prompt: str, model: Optional[str] = None) -> Optional[dict[str, Any]]:
     raw_text = ask_gemini(prompt, model)
 
     if raw_text.startswith("Gemini server is currently busy"):
         logger.error("Could not get Gemini response after retries.")
         return None
-    logger.error("RAW GEMINI RESPONSE:\n%s", raw_text)
+
+    # Log full Gemini response
+    logger.info("=" * 80)
+    logger.info("RAW GEMINI RESPONSE:")
+    logger.info(raw_text)
+    logger.info("=" * 80)
+
     parsed = extract_json(raw_text)
 
     if parsed is None:
